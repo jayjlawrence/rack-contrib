@@ -5,21 +5,29 @@ module Rack
       @app = app
     end
 
+    def logfile
+      @logfile ||= ::File.join(::File.dirname(Rails.logger.instance_variable_get('@logger').instance_variable_get('@log_dest').path.to_s), "request_print.log")
+    end
+
+    def logfile_flag
+      @logfile_flag ||= ::File.join(::File.dirname(Rails.logger.instance_variable_get('@logger').instance_variable_get('@log_dest').path.to_s), "request_print.log.stop")
+    end
+
     def call(env)
       # See http://rack.rubyforge.org/doc/SPEC.html for details
-      puts "**********\n Environment\n **************"
-      puts env.inspect
-      
-      puts "**********\n Response\n **************"
-      response = @app.call(env)
-      puts response.inspect
+      # Assume under Rails
+      ::File.open(logfile, "at") do |file|
+        file.puts "********** Environment #{env['action_dispatch.request_id']}\n#{env.inspect}"
+      end unless ::File.exists?(logfile_flag)
 
-      puts "**********\n Response contents\n **************"
-      response[2].each do |chunk|
-        puts chunk
-      end
-      puts "\n \n"
+      response = @app.call(env)
+
+      ::File.open(logfile,"at") do |file|
+        file.puts "********** Response #{env['action_dispatch.request_id']}\n#{response.inspect}\n**********\n Response contents #{env['action.dispatch.request_id']}#{response[2].body.inspect}\n\n"
+      end ::File.exists?(logfile_flag)
+
       return response
+
     end
   end
 end
