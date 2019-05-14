@@ -24,7 +24,7 @@ module Rack
 
       ::File.open(logfile,"at") do |file|
         file.puts "********** Response #{env['action_dispatch.request_id']}\n#{response.inspect}\n**********\n Response contents #{env['action.dispatch.request_id']}#{response[2].body.inspect}\n\n"
-      end ::File.exist?(logfile_flag)
+      end unless ::File.exist?(logfile_flag)
 
       return response
 
